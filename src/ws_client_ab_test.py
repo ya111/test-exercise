@@ -86,5 +86,6 @@ async def compare_connections():
         print(f"draws: {draws}")
         print(f"max diff: {max_diff:.4f} ms")
 
+
 if __name__ == "__main__":
     asyncio.run(compare_connections())
