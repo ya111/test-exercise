@@ -50,7 +50,7 @@ async def compare_connections():
     connection2_wins = 0
     draws = 0
     max_diff = 0
-    total_messages = 100
+    total_messages = 10
 
 
     try:

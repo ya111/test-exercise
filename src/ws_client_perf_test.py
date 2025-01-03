@@ -39,7 +39,7 @@ async def read_messages(websocket):
                 latency = (receipt_time - server_time).total_seconds() * 1000  # Convert to milliseconds
                 latencies.append(latency)
                 count_messages += 1
-                print(f"Received message with latency: {latency:.4f} ms")
+                print(f"{count_messages}/{total_messages} Received message with latency: {latency:.4f} ms")
 
             if count_messages >= total_messages:
                 break
