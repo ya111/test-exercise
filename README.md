@@ -5,25 +5,26 @@ python3 run_app.py
 
 ### How to run code 
 Simple subscription to coinbase ticker.
+You can change count of messages via `total_messages`, [read more info below](#total-messages).
 ```
 python3 run_app.py ws
 ```
 
 ### How to run ab test
-You can change count of messages via `total_messages` variable.
 There are simple AB tests to compare the time at which the same message is received between 2 connections.
+You can change count of messages via `total_messages`, [read more info below](#total-messages).
 ```
 python3 run_app.py ws_ab
 ```
 
 ### How to run perf test
-You can change count of messages via `total_messages` variable.
 There are simple tests for receive latency and aggregate results.
+You can change count of messages via `total_messages`, [read more info below](#total-messages).
 ```
 python3 run_app.py ws_perf
 ```
 
-### You can change the number of messages
+### How to change the number of messages {#total-messages}
 ```
 python3 run_app.py ws --total_messages=10 (default=None)
 python3 run_app.py ws_ab --total_messages=15 (default=10)
