@@ -11,7 +11,7 @@ SUBSCRIBE_MESSAGE = {
     "channels": [
         {
             "name": "heartbeat",
-            "product_ids": ["ET1H-EUR"]
+            "product_ids": ["ETH-EUR"]
         }
     ]
 }
@@ -33,6 +33,11 @@ async def read_messages(websocket, process_message_callback=None, total_messages
         while True:
             message = await websocket.recv()
             print("Received message:", message)
+
+            data = json.loads(message)
+            if data.get("type") == "error":
+                print(f"Error detected: {message}; Exiting loop.")
+                break
 
             receipt_time = datetime.utcnow()
 
