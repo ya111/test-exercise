@@ -3,25 +3,7 @@ import json
 import websockets
 from datetime import datetime, timezone
 
-
-WS_URI = "wss://ws-feed.exchange.coinbase.com"
-SUBSCRIBE_MESSAGE = {
-    "type": "subscribe",
-    "channels": [
-        {
-            "name": "heartbeat",
-            "product_ids": ["ETH-EUR"]
-        }
-    ]
-}
-
-
-async def connect_and_subscribe(name):
-    websocket = await websockets.connect(WS_URI)
-    await websocket.send(json.dumps(SUBSCRIBE_MESSAGE))
-    print(f"Connected {name}")
-
-    return websocket
+from ws_utils import connect_and_subscribe
 
 
 async def read_messages(name, websocket, queue):
@@ -70,6 +52,8 @@ async def compare_connections():
                 elif (conn1_data[2] - conn2_data[2]).total_seconds() == 0:
                     draws += 1
                 count_messages += 1 # success attempt -> +1
+                print (f"{count_messages}/{total_messages} — seq={conn1_data[1]}; conn1={conn1_data[2]}, conn2={conn2_data[2]}; Time difference is {latency_diff:.4f} ms")
+
             else:
                 # If not matched, enqueue the later message back for further comparison
                 if conn1_data[1] < conn2_data[1]:
@@ -77,7 +61,6 @@ async def compare_connections():
                 else:
                     queue1.put_nowait(conn1_data)
 
-            print (f"{count_messages}/{total_messages}")
             if count_messages >= total_messages:
                 break
     finally:

@@ -4,23 +4,7 @@ import numpy
 import websockets
 from datetime import datetime
 
-
-WS_URI = "wss://ws-feed.exchange.coinbase.com"
-SUBSCRIBE_MESSAGE = {
-    "type": "subscribe",
-    "channels": [
-        {
-            "name": "ticker",
-            "product_ids": ["ETH-EUR"]
-        }
-    ]
-}
-
-
-async def connect_and_subscribe():
-    websocket = await websockets.connect(WS_URI)
-    await websocket.send(json.dumps(SUBSCRIBE_MESSAGE))
-    return websocket
+from ws_utils import connect_and_subscribe
 
 
 async def read_messages(websocket):
