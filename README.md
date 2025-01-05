@@ -38,3 +38,10 @@ pytest tests/tests_ws_client.py --alluredir=allure-results
 allure generate allure-results -o allure-report --clean 
 allure open allure-report
 ```
+
+# Dockerfile
+Dockerfile sample
+```
+docker build -t project_name .
+docker run --rm project_name python run_app.py ws_ab --total_messages=50
+```
