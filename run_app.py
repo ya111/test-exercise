@@ -9,7 +9,7 @@ from src.ws_client_perf_test import perf_test as run_ws_perf
 def main():
     parser = argparse.ArgumentParser(description="WS reader and test application")
     
-    subparsers = parser.add_subparsers(dest='command', help='Subcommands for different functionalities')
+    subparsers = parser.add_subparsers(dest='command', help='allowed commands')
 
     parser_ws = subparsers.add_parser('ws', help='Run ws reader')
     parser_ws.add_argument('--total_messages', type=int, default=None, help='Total number of matching messages to process')
