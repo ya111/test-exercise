@@ -1,20 +1,6 @@
-import asyncio
-import json
-import websockets
-
-from ws_utils import connect_and_subscribe
+from src.ws_utils import connect_and_subscribe, read_messages
 
 
-async def read_messages(websocket):
-    while True:
-        message = await websocket.recv()
-        print("Received message:", message)
-
-
-async def main():
+async def ws_reader(total_messages):
     websocket = await connect_and_subscribe()
-    await read_messages(websocket)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    await read_messages(websocket=websocket, total_messages=total_messages)

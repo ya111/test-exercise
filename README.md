@@ -1,22 +1,33 @@
+### Help is here: 
+```
+python3 run_app.py
+```
+
 ### How to run code 
 Simple subscription to coinbase ticker.
 ```
-python3 src/ws_client.py
+python3 run_app.py ws
 ```
 
 ### How to run ab test
 You can change count of messages via `total_messages` variable.
 There are simple AB tests to compare the time at which the same message is received between 2 connections.
 ```
-python3 src/ws_client_ab_test.py
+python3 run_app.py ws_ab
 ```
 
 ### How to run perf test
 You can change count of messages via `total_messages` variable.
 There are simple tests for receive latency and aggregate results.
-
 ```
-python3 src/ws_client_perf_test.py
+python3 run_app.py ws_perf
+```
+
+### You can change the number of messages
+```
+python3 run_app.py ws --total_messages=10 (default=None)
+python3 run_app.py ws_ab --total_messages=15 (default=10)
+python3 run_app.py ws_perf --total_messages=15 (default=10)
 ```
 
 ### How to run tests and open allure report

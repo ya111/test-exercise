@@ -1,39 +1,22 @@
 import asyncio
-import json
-import websockets
-from datetime import datetime, timezone
 
-from ws_utils import connect_and_subscribe
+from src.ws_utils import connect_and_subscribe, read_messages
 
 
-async def read_messages(name, websocket, queue):
-    while True:
-        message = await websocket.recv()
-        receipt_time = datetime.utcnow().replace(tzinfo=timezone.utc)
-        data = json.loads(message)
-        if data.get("type") == "heartbeat":
-            sequence = data.get("sequence")
-            queue.put_nowait((name, sequence, receipt_time, message))
-            # print(f"{name}: Received message at {receipt_time.isoformat()}")
-
-
-async def compare_connections():
+async def compare_connections(total_messages):
     queue1 = asyncio.Queue()
     queue2 = asyncio.Queue()
 
     connection1 = await connect_and_subscribe("Connection 1")
     connection2 = await connect_and_subscribe("Connection 2")
-
-    task1 = asyncio.create_task(read_messages("Connection 1", connection1, queue1))
-    task2 = asyncio.create_task(read_messages("Connection 2", connection2, queue2))
+    task1 = asyncio.create_task(read_messages(websocket=connection1, queue=queue1, name="Connection 1"))
+    task2 = asyncio.create_task(read_messages(websocket=connection2, queue=queue2, name="Connection 2"))
 
     count_messages = 0
     connection1_wins = 0
     connection2_wins = 0
     draws = 0
     max_diff = 0
-    total_messages = 10
-
 
     try:
         while True:
@@ -68,7 +51,3 @@ async def compare_connections():
         print(f"conn2 wins: {connection2_wins}")
         print(f"draws: {draws}")
         print(f"max diff: {max_diff:.4f} ms")
-
-
-if __name__ == "__main__":
-    asyncio.run(compare_connections())
