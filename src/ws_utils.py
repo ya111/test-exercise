@@ -16,7 +16,7 @@ SUBSCRIBE_MESSAGE = {
     "channels": [
         {
             "name": "heartbeat",
-            "product_ids": ["E1TH-EUR"]
+            "product_ids": ["ETH-EUR"]
         }
     ]
 }
