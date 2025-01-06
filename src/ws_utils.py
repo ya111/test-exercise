@@ -1,8 +1,13 @@
 import json
+import logging
 import numpy
 import websockets
 
 from datetime import datetime, timezone
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 WS_URI = "wss://ws-feed.exchange.coinbase.com"
@@ -11,17 +16,17 @@ SUBSCRIBE_MESSAGE = {
     "channels": [
         {
             "name": "heartbeat",
-            "product_ids": ["ETH-EUR"]
+            "product_ids": ["E1TH-EUR"]
         }
     ]
 }
 
 
 async def connect_and_subscribe(name="ws"):
-    print(f"Connecting {name}...")
+    logging.info(f"Connecting {name}...")
     websocket = await websockets.connect(WS_URI)
     await websocket.send(json.dumps(SUBSCRIBE_MESSAGE))
-    print(f"{name} subscribed.")
+    logging.info(f"{name} subscribed.")
     return websocket
 
 
@@ -32,11 +37,11 @@ async def read_messages(websocket, process_message_callback=None, total_messages
     try:
         while True:
             message = await websocket.recv()
-            print("Received message:", message)
+            logging.info(f"Received message: {message}")
 
             data = json.loads(message)
             if data.get("type") == "error":
-                print(f"Error detected: {message}; Exiting loop.")
+                logging.error(f"Error detected: {message}; Exiting loop.")
                 break
 
             receipt_time = datetime.utcnow()
@@ -46,7 +51,7 @@ async def read_messages(websocket, process_message_callback=None, total_messages
 
                 if latency is not None:
                     latencies.append(latency)
-                    print(f"{count_messages}/{total_messages} Received message with latency: {latency:.4f} ms")
+                    logging.info(f"{count_messages}/{total_messages} Received message with latency: {latency:.4f} ms")
 
             if total_messages is not None:
                 count_messages += 1
@@ -56,7 +61,6 @@ async def read_messages(websocket, process_message_callback=None, total_messages
                 if data.get("type") == "heartbeat":
                     sequence = data.get("sequence")
                     queue.put_nowait((name, sequence, receipt_time, message))
-                    print("test", data)
 
             if total_messages is not None and count_messages >= total_messages + 1: # 1st message is subscription message
                 break
@@ -64,8 +68,8 @@ async def read_messages(websocket, process_message_callback=None, total_messages
     finally:
         if latencies:
             percentiles = numpy.percentile(latencies, [50, 90, 95, 99])
-            print("Latency Percentiles (ms):")
-            print(f"50th: {percentiles[0]:.4f}")
-            print(f"90th: {percentiles[1]:.4f}")
-            print(f"95th: {percentiles[2]:.4f}")
-            print(f"99th: {percentiles[3]:.4f}")
+            logging.info("Latency Percentiles (ms):")
+            logging.info(f"50th: {percentiles[0]:.4f}")
+            logging.info(f"90th: {percentiles[1]:.4f}")
+            logging.info(f"95th: {percentiles[2]:.4f}")
+            logging.info(f"99th: {percentiles[3]:.4f}")

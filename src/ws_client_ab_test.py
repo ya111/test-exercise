@@ -1,6 +1,10 @@
 import asyncio
+import logging
 
 from src.ws_utils import connect_and_subscribe, read_messages
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 async def compare_connections(total_messages):
@@ -25,7 +29,7 @@ async def compare_connections(total_messages):
 
             if conn1_data[1] == conn2_data[1]:  # Compare sequence numbers
                 latency_diff = (conn1_data[2] - conn2_data[2]).total_seconds() * 1000
-                # print(f"Message with sequence {conn1_data[1]}: Time difference is {latency_diff:.4f} ms")
+                # logging.info(f"Message with sequence {conn1_data[1]}: Time difference is {latency_diff:.4f} ms")
                 if abs(latency_diff) > max_diff: 
                     max_diff = abs(latency_diff)
                 if (conn1_data[2] - conn2_data[2]).total_seconds() > 0:
@@ -35,7 +39,7 @@ async def compare_connections(total_messages):
                 elif (conn1_data[2] - conn2_data[2]).total_seconds() == 0:
                     draws += 1
                 count_messages += 1 # success attempt -> +1
-                print (f"{count_messages}/{total_messages} — seq={conn1_data[1]}; conn1={conn1_data[2]}, conn2={conn2_data[2]}; Time difference is {latency_diff:.4f} ms")
+                logging.info(f"{count_messages}/{total_messages} — seq={conn1_data[1]}; conn1={conn1_data[2]}, conn2={conn2_data[2]}; Time difference is {latency_diff:.4f} ms")
 
             else:
                 # If not matched, enqueue the later message back for further comparison
@@ -47,7 +51,7 @@ async def compare_connections(total_messages):
             if count_messages >= total_messages:
                 break
     finally:
-        print(f"conn1 wins: {connection1_wins}")
-        print(f"conn2 wins: {connection2_wins}")
-        print(f"draws: {draws}")
-        print(f"max diff: {max_diff:.4f} ms")
+        logging.info(f"conn1 wins: {connection1_wins}")
+        logging.info(f"conn2 wins: {connection2_wins}")
+        logging.info(f"draws: {draws}")
+        logging.info(f"max diff: {max_diff:.4f} ms")
