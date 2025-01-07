@@ -1,12 +1,7 @@
 import allure
 import pytest
-import logging
 
 from src.ws_utils import connect_and_subscribe, read_messages
-from src.ws_client import ws_reader
-
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 @pytest.fixture
