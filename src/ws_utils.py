@@ -3,7 +3,7 @@ import logging
 import numpy
 import websockets
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

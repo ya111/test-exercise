@@ -1,7 +1,5 @@
 import allure
-import json
 import pytest
-import websockets
 import logging
 
 from src.ws_utils import connect_and_subscribe, read_messages
@@ -15,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def uri():
     return "wss://ws-feed.exchange.coinbase.com"
 
+
 @pytest.fixture
 def subscribe_message():
     subscribe_message = {
@@ -27,6 +26,7 @@ def subscribe_message():
         ]
     }
     return subscribe_message
+
 
 @allure.title("WS Connection")
 @allure.description("Test to verify if the first message is a subscription confirmation.")
