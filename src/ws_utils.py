@@ -22,10 +22,10 @@ SUBSCRIBE_MESSAGE = {
 }
 
 
-async def connect_and_subscribe(name="ws"):
+async def connect_and_subscribe(name="ws", subscribe_message=SUBSCRIBE_MESSAGE):
     logging.info(f"Connecting {name}...")
     websocket = await websockets.connect(WS_URI)
-    await websocket.send(json.dumps(SUBSCRIBE_MESSAGE))
+    await websocket.send(json.dumps(subscribe_message))
     logging.info(f"{name} subscribed.")
     return websocket
 
@@ -33,11 +33,13 @@ async def connect_and_subscribe(name="ws"):
 async def read_messages(websocket, process_message_callback=None, total_messages=None, queue=None, name=None):
     latencies = []
     count_messages = 0
+    received_messages = []
 
     try:
         while True:
             message = await websocket.recv()
             logging.info(f"Received message: {message}")
+            received_messages.append(json.loads(message))
 
             data = json.loads(message)
             if data.get("type") == "error":
@@ -73,3 +75,5 @@ async def read_messages(websocket, process_message_callback=None, total_messages
             logging.info(f"90th: {percentiles[1]:.4f}")
             logging.info(f"95th: {percentiles[2]:.4f}")
             logging.info(f"99th: {percentiles[3]:.4f}")
+
+    return received_messages

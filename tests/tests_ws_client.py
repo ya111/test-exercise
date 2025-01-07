@@ -1,19 +1,22 @@
 import allure
-import asyncio
 import json
 import pytest
 import websockets
+import logging
+
+from src.ws_utils import connect_and_subscribe, read_messages
+from src.ws_client import ws_reader
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 @pytest.fixture
 def uri():
     return "wss://ws-feed.exchange.coinbase.com"
 
-
-@allure.title("WS Connection")
-@allure.description("Test to verify if the first message is a subscription confirmation.")
-@pytest.mark.asyncio
-async def test_first_message_is_subscription(uri):
+@pytest.fixture
+def subscribe_message():
     subscribe_message = {
         "type": "subscribe",
         "channels": [
@@ -23,7 +26,12 @@ async def test_first_message_is_subscription(uri):
             }
         ]
     }
+    return subscribe_message
 
+@allure.title("WS Connection")
+@allure.description("Test to verify if the first message is a subscription confirmation.")
+@pytest.mark.asyncio
+async def test_first_message_is_subscription(uri, subscribe_message):        
     expected_message = {
         "type": "subscriptions",
         "channels": [
@@ -34,24 +42,20 @@ async def test_first_message_is_subscription(uri):
             }
         ]
     }
+    
+    websocket = await connect_and_subscribe(name="test", subscribe_message=subscribe_message)
+    received_messages = await read_messages(websocket=websocket, total_messages=3)
 
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(json.dumps(subscribe_message))
-        
-        response = await websocket.recv()
-
-        message = json.loads(response)
-
-        assert message['type'] == 'subscriptions', f"Unexpected message type: expected 'subscriptions, actual: {message['type']}"
-        assert 'channels' in message, "Expected an channels field in response"
-        assert message == expected_message, f"Message is not expected, current message is {message}"
+    assert received_messages[0] == expected_message, f"received message is:  '{received_messages[0]}' "
+    assert received_messages[0]['type'] == 'subscriptions', f"Unexpected message type: expected 'subscriptions, actual: {received_messages[0]['type']}"
+    assert 'channels' in received_messages[0], "Expected an channels field in response"
+    assert received_messages[0] == expected_message, f"Message is not expected, current message is {received_messages[0]}"
 
 
 @allure.title("WS connection with invalid product ID")
 @allure.description("Test to validate behavior when subscribing with an invalid product ID.")
 @pytest.mark.asyncio
 async def test_invalid_product_id(uri):
-    uri = "wss://ws-feed.exchange.coinbase.com"
     invalid_subscribe_message = {
         "type": "subscribe",
         "channels": [
@@ -62,55 +66,34 @@ async def test_invalid_product_id(uri):
         ]
     }
 
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(json.dumps(invalid_subscribe_message))
-        
-        response = await websocket.recv()
+    websocket = await connect_and_subscribe(name="test", subscribe_message=invalid_subscribe_message)
+    received_messages = await read_messages(websocket=websocket, total_messages=3)
 
-        error_message = json.loads(response)
-
-        assert error_message['type'] == 'error', f"Unexpected message type: expected 'error, actual: {error_message['type']}"
-        assert 'message' in error_message, "Expected an error message field in response"
-        assert 'Failed to subscribe' in error_message['message'], f"Unexpected error message: {error_message['message']}"
-        assert 'is not a valid product' in error_message['reason'], f"Unexpected error reason: {error_message['reason']}"
+    assert received_messages[0]['type'] == 'error', f"Unexpected message type: expected 'error, actual: {received_messages[0]['type']}"
+    assert 'message' in received_messages[0], "Expected an error message field in response"
+    assert 'Failed to subscribe' in received_messages[0]['message'], f"Unexpected error message: {received_messages[0]['message']}"
+    assert 'is not a valid product' in received_messages[0]['reason'], f"Unexpected error reason: {received_messages[0]['reason']}"
 
 
 @allure.title("Heartbeat validation")
 @allure.description("Test to verify the format of the second message received (expected: heartbeat message).")
 @pytest.mark.asyncio
-async def test_second_message_format(uri):
-    uri = "wss://ws-feed.exchange.coinbase.com"
-    subscribe_message = {
-        "type": "subscribe",
-        "channels": [
-            {
-                "name": "heartbeat",
-                "product_ids": ["ETH-EUR"]
-            }
-        ]
+async def test_second_message_format(uri, subscribe_message):
+    websocket = await connect_and_subscribe(name="test", subscribe_message=subscribe_message)
+    received_messages = await read_messages(websocket=websocket, total_messages=3)
+
+    expected_fields = {
+        "type": str,
+        "last_trade_id": int,
+        "product_id": str,
+        "sequence": int,
+        "time": str
     }
 
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(json.dumps(subscribe_message))
-        
-        # should be ignored, there is subscription confirmation
-        await websocket.recv()
-        
-        second_response = await websocket.recv()
-        second_message = json.loads(second_response)
+    assert received_messages[1]['type'] == 'heartbeat', f"Unexpected message type: expected 'heartbeat, actual: {received_messages[1]['type']}"
 
-        expected_fields = {
-            "type": str,
-            "last_trade_id": int,
-            "product_id": str,
-            "sequence": int,
-            "time": str
-        }
+    for field, field_type in expected_fields.items():
+        assert field in received_messages[1], f"Field '{field}' is missing in the message."
+        assert isinstance(received_messages[1][field], field_type), f"Field '{field}' is not of type {field_type.__name__}."
 
-        assert second_message['type'] == 'heartbeat', f"Unexpected message type: expected 'heartbeat, actual: {second_message['type']}"
-
-        for field, field_type in expected_fields.items():
-            assert field in second_message, f"Field '{field}' is missing in the message."
-            assert isinstance(second_message[field], field_type), f"Field '{field}' is not of type {field_type.__name__}."
-
-        assert second_message['product_id'] == 'ETH-EUR', "The 'product_id' field is not 'ETH-EUR'."
+    assert received_messages[1]['product_id'] == 'ETH-EUR', "The 'product_id' field is not 'ETH-EUR'."
